@@ -3,74 +3,107 @@ import io
 import os
 import streamlit as st
 from rapidfuzz import fuzz
+import requests
+
 
 from drive_manager import (
-    list_data_files,
     get_drive_service,
-    api_get_files_in_folder,
     api_get_file_content,
-    FOLDER_ID_PROMPT_FRAMEWORK
+    get_guideline_filenames,
+    get_framework_content,
+    get_all_patient_files
 )
 
 client = Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 
+#For pulling data from postgres api
+def fetch_patient_data():
+    print("Calling patient data API...")
 
-# ---------------------------------------------------------
-# LOAD ALL FRAMEWORKS
-# ---------------------------------------------------------
+    url = "https://backend.qa.continuumcare.ai/api/llm/data?user_id=182&page=2&size=20"
+
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {st.secrets['API_BEARER_TOKEN']}"
+    }
+
+    try:
+        r = requests.get(url, headers=headers)
+        print("Status:", r.status_code)
+        print("Queried URL:", url)
+        print("Raw text:", r.text[:200])
+
+        return r.json()
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+
+def fetch_patient_data_by_id(_):
+    print("Fetching HARD-CODED patient URL...")
+
+    url = "https://backend.qa.continuumcare.ai/api/llm/data?user_id=182&page=2&size=20"
+
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {st.secrets['API_BEARER_TOKEN']}"
+    }
+
+    try:
+        r = requests.get(url, headers=headers)
+        print("Status:", r.status_code)
+        print("Queried URL:", url)
+        print("Raw text:", r.text[:200])
+
+        return r.json()
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
 def load_frameworks():
-    """Load all framework files, extract function names, and show detailed logs."""
-    print("\n========================")
-    print("🔎 Loading framework files...")
-    print("========================\n")
+    print(">>> CACHE USED? cached_frameworks exists and valid:",
+          "cached_frameworks" in st.session_state and 
+          st.session_state.cached_frameworks is not None and
+          len(st.session_state.cached_frameworks) > 0)
 
-    service = get_drive_service()
+    # 1. If cache exists AND has data → return it
+    if (
+        "cached_frameworks" in st.session_state
+        and isinstance(st.session_state.cached_frameworks, list)
+        and len(st.session_state.cached_frameworks) > 0
+    ):
 
-    print("📁 Framework folder ID:", FOLDER_ID_PROMPT_FRAMEWORK)
+        print(">>> Returning cached frameworks")
+        return st.session_state.cached_frameworks
 
-    # Get files in the framework folder
-    framework_files = api_get_files_in_folder(service, FOLDER_ID_PROMPT_FRAMEWORK)
+    print(">>> No valid cache found, loading frameworks from Drive")
 
-    print("🗂 Files returned from Drive:", [f["name"] for f in framework_files])
+    raw = get_framework_content()  # downloads once per session
 
     frameworks = []
+    if raw is None or raw.strip() == "":
+        print("⚠️ WARNING: get_framework_content() returned empty content")
+    else:
+        blocks = raw.split("--- START OF PROMPT FRAMEWORK:")
 
-    for f in framework_files:
-        print("\n--------------------------------")
-        print("📄 Reading file:", f["name"])
-        print("--------------------------------")
+        for block in blocks[1:]:
+            try:
+                header, content = block.split("---", 1)
+                name = header.strip()
+                full_text = content.replace("END OF PROMPT FRAMEWORK:", "").strip()
+                frameworks.append({"name": name, "content": full_text})
+            except:
+                print("⚠️ Skipping malformed framework block")
 
-        # Load full content
-        content = api_get_file_content(service, f["id"], f["mimeType"])
-
-        if not content:
-            print("⚠️ File content EMPTY or unreadable.")
-            continue
-
-        # Extract first line
-        first_line = content.split("\n")[0]
-        print("🔍 Raw first line:", repr(first_line))
-
-        # Remove BOM + whitespace
-        clean_first_line = first_line.lstrip("\ufeff").strip()
-        print("✨ Cleaned first line:", repr(clean_first_line))
-
-        # Check for Function header
-        if clean_first_line.lower().startswith("function:"):
-            function_name = clean_first_line.replace("Function:", "").strip()
-            print("✅ Framework detected. Function name:", function_name)
-
-            frameworks.append({
-                "name": function_name,
-                "content": content
-            })
-        else:
-            print("❌ This file does NOT start with 'Function:' — skipped.")
-
-    print("\n📊 Total frameworks loaded:", len(frameworks))
-    print("========================\n")
+    # 3. Save to cache
+    st.session_state.cached_frameworks = frameworks
+    print(">>> Frameworks cached!", len(frameworks))
 
     return frameworks
+
+
 
 
 
@@ -95,14 +128,37 @@ def choose_best_framework(user_query, frameworks):
 # ---------------------------------------------------------
 # MAIN RESPONSE GENERATOR
 # ---------------------------------------------------------
+
+def load_guideline_contents(required_filenames):
+    """Load only the selected guideline files, cached per session."""
+    
+    # Create cache if not exists
+    if "cached_guideline_contents" not in st.session_state:
+        st.session_state.cached_guideline_contents = {}
+
+    cache = st.session_state.cached_guideline_contents
+    service = get_drive_service()
+
+    # All guideline metadata
+    all_files = get_guideline_filenames()
+
+    # Download only selected
+    for f in all_files:
+        name = f["name"]
+        if name in required_filenames and name not in cache:
+            print("Downloading guideline (selected):", name)
+            text = api_get_file_content(service, f["id"], f["mimeType"])
+            cache[name] = text
+
+    # Return complete cache but you will only use selected keys
+    return cache
+
+
 def generate_response(user_query):
     print("\n🔍 Starting generate_response()")
     service = get_drive_service()
-    files = list_data_files()
-
-    print(f"📂 Total files found: {len(files)}")
-
-    # 1. Load and route frameworks
+    patient_files = get_all_patient_files()
+    # 1. Load & match framework
     frameworks = load_frameworks()
     best_fw = choose_best_framework(user_query, frameworks)
 
@@ -111,41 +167,110 @@ def generate_response(user_query):
 
     print(f"🧠 Chosen Framework: {chosen_framework_name}")
 
-    # 2. System prompt with chosen framework
     system_prompt = f"""
-You MUST strictly follow the framework provided below.
-Do NOT ignore, modify, or override any part of it.
+You MUST strictly follow the framework below. 
+Do not ignore, modify, or override any part of it.
 
 === FRAMEWORK START: {chosen_framework_name} ===
 {framework_text}
 === FRAMEWORK END ===
 """
 
-    # 3. Load patient data + guidelines
-    combined_text = ""
-    for f in files:
-        if f.get('source') in ['patient_data', 'guidelines']:
-            content = api_get_file_content(service, f["id"], f["mimeType"])
-            combined_text += f"\n\n---\nDocument: {f['name']}\n{content}"
+    # ----------------------------------------------------------
+    # 2. LOAD PATIENT DATA FIRST (IMPORTANT!)
+    # ----------------------------------------------------------
+    patient_text = ""
+    for f in patient_files:
+        patient_text += f"\n\n---\nPATIENT FILE: {f['name']}\n{f['content']}"
+       
 
-    # 4. Build user prompt
-    user_message = f"""Here is the user's health data and relevant guidelines:
+    # ----------------------------------------------------------
+    # 3. GUIDELINE SELECTION (FILENAMES + PATIENT DATA)
+    # ----------------------------------------------------------
+    guideline_files = get_guideline_filenames()
+    filename_list = [f["name"] for f in guideline_files]
 
-{combined_text}
+    selector_prompt = f"""
+You are the guideline selector for a health summarization system.
+
+Below is the patient's complete clinical data (all patient files):
+
+=== PATIENT DATA ===
+{patient_text}
+
+---
+
+User query:
+"{user_query}"
+
+Below is the list of available ADA guideline documents:
+{chr(10).join(['- ' + name for name in filename_list])}
+
+Your task:
+1. Identify the patient's main clinical issues from the combined data above.
+2. Select ONLY the guideline files relevant to those issues.
+3. Return ONLY a JSON array of filenames.
+
+Example:
+["ADA Glycemic Goals and Hypoglycemia 2025.pdf",
+ "ADA ChronicKidneyDiseaseAndRiskMgmt Diabetes 2025.pdf"]
+"""
+
+    print("📁 Asking Claude to select relevant guideline filenames...")
+
+    selector_resp = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=300,
+        messages=[{"role": "user", "content": selector_prompt}]
+    )
+
+    raw_json = selector_resp.content[0].text
+    print("🔍 Claude selector output:", raw_json)
+
+    import json
+    try:
+        selected_filenames = json.loads(raw_json)
+    except:
+        selected_filenames = filename_list[:3]   # safe fallback
+
+    print("📌 Selected guideline files:", selected_filenames)
+
+    # ----------------------------------------------------------
+    # 4. LOAD ONLY SELECTED GUIDELINE TEXT
+    # ----------------------------------------------------------
+    guideline_contents = load_guideline_contents(selected_filenames)
+
+
+    selected_guideline_text = ""
+    for name in selected_filenames:
+        if name in guideline_contents:
+            selected_guideline_text += f"\n\n---\nGUIDELINE FILE: {name}\n{guideline_contents[name]}"
+
+
+    # ----------------------------------------------------------
+    # 5. Final prompt
+    # ----------------------------------------------------------
+    user_message = f"""
+Below are the materials you may use:
+
+=== PATIENT DATA ===
+{patient_text}
+
+=== SELECTED ADA GUIDELINES ===
+{selected_guideline_text}
 
 ---
 
 User's question: {user_query}
 """
 
-    print("🧠 Sending to Claude...")
+    print("🧠 Sending final request to Claude...")
 
-    # 5. Send to Claude
-    response = client.messages.create(
+    final_resp = client.messages.create(
         model="claude-sonnet-4-20250514",
-        max_tokens=1500,
+        max_tokens=2000,
         system=system_prompt,
         messages=[{"role": "user", "content": user_message}],
     )
 
-    return response.content[0].text
+    return final_resp.content[0].text

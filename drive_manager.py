@@ -6,6 +6,16 @@ import io
 import json
 import streamlit as st
 
+if "cached_guidelines" not in st.session_state:
+    st.session_state.cached_guidelines = None
+
+if "cached_frameworks" not in st.session_state:
+    st.session_state.cached_frameworks = None
+
+if "cached_patient_files" not in st.session_state:
+    st.session_state.cached_patient_files = None
+
+
 # ----------------------------------------------------------------------
 # 1. Configuration (IDs and Scopes)
 # ----------------------------------------------------------------------
@@ -185,12 +195,15 @@ def list_data_files():
 # 6. Framework Loader
 # ----------------------------------------------------------------------
 def get_framework_content():
+    """Load all frameworks only once per session."""
+    if st.session_state.cached_frameworks is not None:
+        return st.session_state.cached_frameworks
+
     service = get_drive_service()
     if not service:
         return ""
 
     framework_files = api_get_files_in_folder(service, FOLDER_ID_PROMPT_FRAMEWORK)
-
     full_framework_content = []
 
     for file in framework_files:
@@ -205,7 +218,10 @@ def get_framework_content():
 
         full_framework_content.append(section)
 
-    return "\n\n".join(full_framework_content)
+    # Save to session cache
+    st.session_state.cached_frameworks = "\n\n".join(full_framework_content)
+    return st.session_state.cached_frameworks
+
 
 
 # ----------------------------------------------------------------------
@@ -251,3 +267,42 @@ def delete_file(file_id):
         print(f"File ID {file_id} deleted.")
     except Exception as e:
         print(f"Error deleting file {file_id}: {e}")
+def get_guideline_filenames():
+    """Return guideline metadata, cached once per session."""
+    if st.session_state.cached_guidelines is not None:
+        return st.session_state.cached_guidelines
+
+    service = get_drive_service()
+    if not service:
+        return []
+
+    guideline_files = api_get_files_in_folder(service, FOLDER_ID_GUIDELINES)
+
+    # Cache it
+    st.session_state.cached_guidelines = [
+        {"id": f["id"], "name": f["name"], "mimeType": f["mimeType"]}
+        for f in guideline_files
+    ]
+
+    return st.session_state.cached_guidelines
+def get_all_patient_files():
+    if st.session_state.cached_patient_files is not None:
+        return st.session_state.cached_patient_files
+
+    service = get_drive_service()
+    if not service:
+        return []
+
+
+    patient_files = api_get_files_in_folder(service, FOLDER_ID_PATIENT_DATA)
+
+    result = []
+    for f in patient_files:
+        content = api_get_file_content(service, f["id"], f["mimeType"])
+        result.append({
+            "name": f["name"],
+            "content": content
+        })
+
+    st.session_state.cached_patient_files = result
+    return result
