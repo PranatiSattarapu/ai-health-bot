@@ -131,19 +131,29 @@ def choose_best_framework(user_query, frameworks):
 # ---------------------------------------------------------
 
 def load_guideline_contents(required_filenames):
-    """Load only the selected guideline files, cached per session."""
-    
-    # Create cache if not exists
+
+    # --- SAFETY NORMALIZATION ---
+    if not isinstance(required_filenames, list):
+        if isinstance(required_filenames, dict):
+            # Claude returned {"files": [...]}
+            if "files" in required_filenames and isinstance(required_filenames["files"], list):
+                required_filenames = required_filenames["files"]
+            else:
+                # force fallback
+                required_filenames = list(required_filenames.values())
+        else:
+            # unknown format → force empty list
+            required_filenames = []
+
+    # Create cache
     if "cached_guideline_contents" not in st.session_state:
         st.session_state.cached_guideline_contents = {}
 
     cache = st.session_state.cached_guideline_contents
     service = get_drive_service()
 
-    # All guideline metadata
     all_files = get_guideline_filenames()
 
-    # Download only selected
     for f in all_files:
         name = f["name"]
         if name in required_filenames and name not in cache:
@@ -151,7 +161,6 @@ def load_guideline_contents(required_filenames):
             text = api_get_file_content(service, f["id"], f["mimeType"])
             cache[name] = text
 
-    # Return complete cache but you will only use selected keys
     return cache
 
 
