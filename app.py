@@ -211,17 +211,45 @@ if "show_chat" not in st.session_state:
 #         st.sidebar.markdown(f"📄 " + f["name"])
 with st.sidebar:
     st.markdown("""
-    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2h-6l-4 4-4-4H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="8" cy="10" r="1" fill="#1E1E1E"/>
-            <circle cx="12" cy="10" r="1" fill="#1E1E1E"/>
-            <circle cx="16" cy="10" r="1" fill="#1E1E1E"/>
-            <path d="M6 18l-2 2v-2" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <h3 style="font-size: 1.5rem; font-weight: 600; color: #1E1E1E; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Chat History</h3>
-    </div>
-    """, unsafe_allow_html=True)
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2h-6l-4 4-4-4H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="8" cy="10" r="1" fill="#1E1E1E"/>
+                <circle cx="12" cy="10" r="1" fill="#1E1E1E"/>
+                <circle cx="16" cy="10" r="1" fill="#1E1E1E"/>
+                <path d="M6 18l-2 2v-2" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: #1E1E1E; margin: 0;">Chat History</h3>
+        </div>
+
+        <!-- Static Chat Entries -->
+        <div style="display: flex; flex-direction: column; gap: 1rem; font-family: Inter, sans-serif;">
+
+          
+            <div style="align-self: flex-end; max-width: 80%; background: #DCF8C6; padding: 0.75rem 1rem; border-radius: 10px 10px 0px 10px; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                Hey, can you summarize my health for the last 30 days?
+            </div>
+
+         
+            <div style="align-self: flex-start; max-width: 80%; background: #F1F0F0; padding: 0.75rem 1rem; border-radius: 10px 10px 10px 0px; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                Sure. According to your recent labs, your glycemic control has slightly improved and kidney markers remain stable.
+            </div>
+
+        
+            <div style="align-self: flex-end; max-width: 80%; background: #DCF8C6; padding: 0.75rem 1rem; border-radius: 10px 10px 0px 10px; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                What guidelines are relevant for my condition?
+            </div>
+
+         
+            <div style="align-self: flex-start; max-width: 80%; background: #F1F0F0; padding: 0.75rem 1rem; border-radius: 10px 10px 10px 0px; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                The ADA Older Adults Diabetes guideline, CKD management guideline, and glycemic goals guideline are most applicable.
+            </div>
+
+        </div>
+        """, unsafe_allow_html=True)
+
+
+
 
 
 # st.divider()
