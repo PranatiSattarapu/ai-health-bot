@@ -241,7 +241,21 @@ Example:
     try:
         selected_filenames = json.loads(raw_json)
     except:
-        selected_filenames = filename_list[:3]   # safe fallback
+        selected_filenames = filename_list[:3]
+
+    # --- NORMALIZE BEFORE LOOPING ---
+    if isinstance(selected_filenames, dict):
+        if "files" in selected_filenames and isinstance(selected_filenames["files"], list):
+            selected_filenames = selected_filenames["files"]
+        else:
+            selected_filenames = list(selected_filenames.values())
+
+    elif isinstance(selected_filenames, str):
+        selected_filenames = [selected_filenames]
+
+    elif not isinstance(selected_filenames, list):
+        selected_filenames = filename_list[:3]
+    # safe fallback
 
     print("📌 Selected guideline files:", selected_filenames)
 
