@@ -268,7 +268,7 @@ with main_col:
     st.markdown(
     f"""
     <div style='text-align: left; margin-bottom: 3rem;'>
-        <h2 style='color: black; margin-bottom: 5px; font-size: 2.5rem;'>Hello!</h2>
+        <h2 style='color: black; margin-bottom: 5px; font-size: 2.5rem;'>Helslo!</h2>
         <p style='font-size: 1.25rem; color: gray;'>{today}</p>
     </div>
     """,
