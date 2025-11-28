@@ -7,6 +7,10 @@ import json
 import streamlit as st
 
 
+# SAFE initialization for Streamlit Cloud
+for key in ["cached_guidelines", "cached_frameworks", "cached_patient_files"]:
+    if key not in st.session_state:
+        st.session_state[key] = None
 
 
 # ----------------------------------------------------------------------
