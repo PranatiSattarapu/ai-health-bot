@@ -131,38 +131,76 @@ def choose_best_framework(user_query, frameworks):
 # ---------------------------------------------------------
 
 def load_guideline_contents(required_filenames):
-
-    # --- SAFETY NORMALIZATION ---
-    if not isinstance(required_filenames, list):
+    """
+    Load guideline contents for the specified filenames.
+    Handles various input formats and caches results.
+    """
+    
+    # --- SAFETY NORMALIZATION (Enhanced) ---
+    # Ensure required_filenames is always a list
+    if required_filenames is None:
+        required_filenames = []
+    elif not isinstance(required_filenames, list):
         if isinstance(required_filenames, dict):
             # Claude returned {"files": [...]}
             if "files" in required_filenames and isinstance(required_filenames["files"], list):
                 required_filenames = required_filenames["files"]
             else:
-                # force fallback
-                required_filenames = list(required_filenames.values())
+                # Extract all values that are lists or strings
+                required_filenames = []
+                for value in required_filenames.values():
+                    if isinstance(value, list):
+                        required_filenames.extend(value)
+                    elif isinstance(value, str):
+                        required_filenames.append(value)
+        elif isinstance(required_filenames, str):
+            # Single filename as string
+            required_filenames = [required_filenames]
         else:
-            # unknown format → force empty list
+            # Unknown type - convert to empty list
+            print(f"⚠️ WARNING: Unexpected type for required_filenames: {type(required_filenames)}")
             required_filenames = []
-
-    # Create cache
+    
+    # Additional safety: ensure all items in the list are strings
+    required_filenames = [str(item) for item in required_filenames if item]
+    
+    print(f"📋 Normalized required_filenames: {required_filenames}")
+    
+    # Create cache if it doesn't exist
     if "cached_guideline_contents" not in st.session_state:
         st.session_state.cached_guideline_contents = {}
 
     cache = st.session_state.cached_guideline_contents
     service = get_drive_service()
+    
+    if not service:
+        print("⚠️ WARNING: Drive service not available")
+        return cache
 
+    # Get all available guideline files
     all_files = get_guideline_filenames()
+    
+    if not all_files:
+        print("⚠️ WARNING: No guideline files found")
+        return cache
 
+    # Load only the required files that aren't already cached
     for f in all_files:
         name = f["name"]
+        # Check if this file is required AND not already cached
         if name in required_filenames and name not in cache:
-            print("Downloading guideline (selected):", name)
-            text = api_get_file_content(service, f["id"], f["mimeType"])
-            cache[name] = text
+            print(f"📥 Downloading guideline: {name}")
+            try:
+                text = api_get_file_content(service, f["id"], f["mimeType"])
+                cache[name] = text
+                print(f"✅ Successfully cached: {name}")
+            except Exception as e:
+                print(f"❌ Error downloading {name}: {e}")
+                cache[name] = f"Error loading file: {str(e)}"
+        elif name in cache:
+            print(f"📦 Using cached version: {name}")
 
     return cache
-
 
 def generate_response(user_query):
     print("\n🔍 Starting generate_response()")
@@ -238,26 +276,59 @@ Example:
     print("🔍 Claude selector output:", raw_json)
 
     import json
-    try:
-        selected_filenames = json.loads(raw_json)
-    except:
-        selected_filenames = filename_list[:3]
+    import re
 
-    # --- NORMALIZE BEFORE LOOPING ---
+    # Try to parse the JSON response
+    selected_filenames = []
+    try:
+        # First, try direct JSON parsing
+        selected_filenames = json.loads(raw_json)
+        print("✅ Successfully parsed JSON directly")
+    except json.JSONDecodeError:
+        print("⚠️ Direct JSON parsing failed, trying to extract JSON from text...")
+        
+        # Try to find JSON array in the text
+        json_match = re.search(r'\[.*?\]', raw_json, re.DOTALL)
+        if json_match:
+            try:
+                selected_filenames = json.loads(json_match.group(0))
+                print("✅ Successfully extracted JSON from text")
+            except json.JSONDecodeError:
+                print("❌ Could not parse extracted JSON")
+                selected_filenames = filename_list[:3]  # Fallback
+        else:
+            print("❌ No JSON array found in response")
+            selected_filenames = filename_list[:3]  # Fallback
+
+    # --- NORMALIZE BEFORE USING ---
     if isinstance(selected_filenames, dict):
         if "files" in selected_filenames and isinstance(selected_filenames["files"], list):
             selected_filenames = selected_filenames["files"]
         else:
-            selected_filenames = list(selected_filenames.values())
+            # Extract values
+            selected_filenames = []
+            for value in selected_filenames.values():
+                if isinstance(value, list):
+                    selected_filenames.extend(value)
+                elif isinstance(value, str):
+                    selected_filenames.append(value)
 
     elif isinstance(selected_filenames, str):
         selected_filenames = [selected_filenames]
 
     elif not isinstance(selected_filenames, list):
+        print(f"⚠️ Unexpected type: {type(selected_filenames)}, using fallback")
         selected_filenames = filename_list[:3]
-    # safe fallback
 
-    print("📌 Selected guideline files:", selected_filenames)
+    # Ensure all items are strings
+    selected_filenames = [str(item) for item in selected_filenames if item]
+
+    # Fallback if empty
+    if not selected_filenames:
+        print("⚠️ No files selected, using first 3 as fallback")
+        selected_filenames = filename_list[:3]
+
+    print("📌 Final selected guideline files:", selected_filenames)
 
     # ----------------------------------------------------------
     # 4. LOAD ONLY SELECTED GUIDELINE TEXT
