@@ -3,6 +3,17 @@ from drive_manager import list_data_files
 from workflow import generate_response
 from datetime import datetime
 
+# --- IMPORTANT: Initialize cache keys BEFORE importing code uses them ---
+CACHE_KEYS = [
+    "cached_guidelines",
+    "cached_frameworks",
+    "cached_patient_files",
+    "cached_guideline_contents"
+]
+
+for key in CACHE_KEYS:
+    if key not in st.session_state:
+        st.session_state[key] = None
 
 
 # --- Streamlit Configuration ---

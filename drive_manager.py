@@ -6,14 +6,7 @@ import io
 import json
 import streamlit as st
 
-if "cached_guidelines" not in st.session_state:
-    st.session_state.cached_guidelines = None
 
-if "cached_frameworks" not in st.session_state:
-    st.session_state.cached_frameworks = None
-
-if "cached_patient_files" not in st.session_state:
-    st.session_state.cached_patient_files = None
 
 
 # ----------------------------------------------------------------------
