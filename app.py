@@ -411,7 +411,7 @@ st.markdown("""
 
 .right-panel .alert-count {
     font-size: 2rem;
-    color: #E4080A;
+    color: #E4080A !important;
     font-weight: normal;
 }
 
