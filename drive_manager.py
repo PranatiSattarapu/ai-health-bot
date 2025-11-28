@@ -286,13 +286,14 @@ def get_guideline_filenames():
 
     return st.session_state.cached_guidelines
 def get_all_patient_files():
-    if st.session_state.cached_patient_files is not None:
-        return st.session_state.cached_patient_files
+    # Safe existence check - NEVER use st.session_state.<attr>
+    if "cached_patient_files" in st.session_state and st.session_state["cached_patient_files"] is not None:
+        return st.session_state["cached_patient_files"]
 
     service = get_drive_service()
     if not service:
+        st.session_state["cached_patient_files"] = []
         return []
-
 
     patient_files = api_get_files_in_folder(service, FOLDER_ID_PATIENT_DATA)
 
@@ -304,5 +305,7 @@ def get_all_patient_files():
             "content": content
         })
 
-    st.session_state.cached_patient_files = result
+    # Store safely
+    st.session_state["cached_patient_files"] = result
     return result
+
