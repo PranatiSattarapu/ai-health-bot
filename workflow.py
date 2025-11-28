@@ -136,69 +136,80 @@ def load_guideline_contents(required_filenames):
     Handles various input formats and caches results.
     """
     
-    # --- SAFETY NORMALIZATION (Enhanced) ---
-    # Ensure required_filenames is always a list
+    print(f"🔍 INPUT TYPE: {type(required_filenames)}")
+    print(f"🔍 INPUT VALUE: {required_filenames}")
+    
+    # --- CRITICAL: ALWAYS convert to list first ---
     if required_filenames is None:
         required_filenames = []
-    elif not isinstance(required_filenames, list):
-        if isinstance(required_filenames, dict):
-            # Claude returned {"files": [...]}
-            if "files" in required_filenames and isinstance(required_filenames["files"], list):
-                required_filenames = required_filenames["files"]
-            else:
-                # Extract all values that are lists or strings
-                required_filenames = []
-                for value in required_filenames.values():
-                    if isinstance(value, list):
-                        required_filenames.extend(value)
-                    elif isinstance(value, str):
-                        required_filenames.append(value)
-        elif isinstance(required_filenames, str):
-            # Single filename as string
-            required_filenames = [required_filenames]
+    
+    # Convert to list based on type
+    if isinstance(required_filenames, str):
+        required_filenames = [required_filenames]
+    elif isinstance(required_filenames, dict):
+        # Try to extract list from dict
+        if "files" in required_filenames:
+            required_filenames = required_filenames["files"]
         else:
-            # Unknown type - convert to empty list
-            print(f"⚠️ WARNING: Unexpected type for required_filenames: {type(required_filenames)}")
-            required_filenames = []
+            # Get all values and flatten
+            temp = []
+            for v in required_filenames.values():
+                if isinstance(v, list):
+                    temp.extend(v)
+                elif isinstance(v, str):
+                    temp.append(v)
+            required_filenames = temp
+    elif not isinstance(required_filenames, list):
+        # Unknown type - force to empty list
+        print(f"⚠️ CRITICAL: Unexpected type {type(required_filenames)}, forcing to empty list")
+        required_filenames = []
     
-    # Additional safety: ensure all items in the list are strings
-    required_filenames = [str(item) for item in required_filenames if item]
+    # Now we're GUARANTEED to have a list
+    # Clean it up - remove None, empty strings, non-strings
+    required_filenames = [str(x).strip() for x in required_filenames if x]
     
-    print(f"📋 Normalized required_filenames: {required_filenames}")
+    print(f"✅ NORMALIZED TO LIST: {required_filenames}")
     
-    # Create cache if it doesn't exist
+    # ===== FIX: Initialize cache properly =====
     if "cached_guideline_contents" not in st.session_state:
         st.session_state.cached_guideline_contents = {}
-
+    
+    # ===== FIX: Ensure cache is a dict, not None =====
     cache = st.session_state.cached_guideline_contents
+    if cache is None or not isinstance(cache, dict):
+        print("⚠️ Cache was None or invalid, initializing to empty dict")
+        cache = {}
+        st.session_state.cached_guideline_contents = cache
+    
+    print(f"📦 Cache status: {len(cache)} items cached")
+    
     service = get_drive_service()
     
     if not service:
-        print("⚠️ WARNING: Drive service not available")
+        print("⚠️ Drive service unavailable")
         return cache
 
-    # Get all available guideline files
     all_files = get_guideline_filenames()
     
     if not all_files:
-        print("⚠️ WARNING: No guideline files found")
+        print("⚠️ No guideline files found")
         return cache
 
-    # Load only the required files that aren't already cached
+    # NOW it's safe to use 'in' operator
     for f in all_files:
         name = f["name"]
-        # Check if this file is required AND not already cached
-        if name in required_filenames and name not in cache:
-            print(f"📥 Downloading guideline: {name}")
-            try:
-                text = api_get_file_content(service, f["id"], f["mimeType"])
-                cache[name] = text
-                print(f"✅ Successfully cached: {name}")
-            except Exception as e:
-                print(f"❌ Error downloading {name}: {e}")
-                cache[name] = f"Error loading file: {str(e)}"
-        elif name in cache:
-            print(f"📦 Using cached version: {name}")
+        try:
+            if name in required_filenames:
+                if name not in cache:
+                    print(f"📥 Downloading: {name}")
+                    text = api_get_file_content(service, f["id"], f["mimeType"])
+                    cache[name] = text
+                    print(f"✅ Cached: {name}")
+                else:
+                    print(f"📦 Already cached: {name}")
+        except Exception as e:
+            print(f"❌ Error with {name}: {e}")
+            cache[name] = f"Error: {str(e)}"
 
     return cache
 

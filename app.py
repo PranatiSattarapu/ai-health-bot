@@ -4,17 +4,16 @@ from workflow import generate_response
 from datetime import datetime
 
 # --- IMPORTANT: Initialize cache keys BEFORE importing code uses them ---
-CACHE_KEYS = [
-    "cached_guidelines",
-    "cached_frameworks",
-    "cached_patient_files",
-    "cached_guideline_contents"
-]
+CACHE_KEYS = {
+    "cached_guidelines": None,
+    "cached_frameworks": None,
+    "cached_patient_files": None,
+    "cached_guideline_contents": {}  # ← FIX: Initialize as empty dict, not None
+}
 
-for key in CACHE_KEYS:
+for key, default_value in CACHE_KEYS.items():
     if key not in st.session_state:
-        st.session_state[key] = None
-
+        st.session_state[key] = default_value
 
 # --- Streamlit Configuration ---
 st.set_page_config(page_title="Health Tutor Console", layout="wide")
