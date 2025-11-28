@@ -196,11 +196,14 @@ def list_data_files():
 # ----------------------------------------------------------------------
 def get_framework_content():
     """Load all frameworks only once per session."""
-    if st.session_state.cached_frameworks is not None:
-        return st.session_state.cached_frameworks
+
+    # SAFE SESSION CHECK
+    if "cached_frameworks" in st.session_state and st.session_state["cached_frameworks"] is not None:
+        return st.session_state["cached_frameworks"]
 
     service = get_drive_service()
     if not service:
+        st.session_state["cached_frameworks"] = ""
         return ""
 
     framework_files = api_get_files_in_folder(service, FOLDER_ID_PROMPT_FRAMEWORK)
@@ -218,9 +221,9 @@ def get_framework_content():
 
         full_framework_content.append(section)
 
-    # Save to session cache
-    st.session_state.cached_frameworks = "\n\n".join(full_framework_content)
-    return st.session_state.cached_frameworks
+    # STORE IN CACHE SAFELY
+    st.session_state["cached_frameworks"] = "\n\n".join(full_framework_content)
+    return st.session_state["cached_frameworks"]
 
 
 
