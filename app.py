@@ -294,7 +294,7 @@ with main_col:
                     <rect x="15" y="14" width="2" height="2" rx="0.5" fill="#1E1E1E"/>
                 </svg>
             </div>""",
-            "text": "Give me my 30-day health report"
+            "text": "Give me a 30-day health summary"
         },
         {
             "icon": """<div class="preset-icon">
