@@ -234,7 +234,7 @@ with st.sidebar:
     <div class="chat-history" style="margin-top: 1rem;">
         <ul style="list-style: none; padding: 0; margin: 0;">
             <li style="padding: 0.75rem; margin-bottom: 0.5rem; background-color: #F5F5F5; border-radius: 8px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#E8E8E8'" onmouseout="this.style.backgroundColor='#F5F5F5'">
-                <span style="font-size: 0.9rem; color: #1E1E1E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Give me my 30-day health report</span>
+                <span style="font-size: 0.9rem; color: #1E1E1E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Give me a 30-day health summary</span>
             </li>
             <li style="padding: 0.75rem; margin-bottom: 0.5rem; background-color: #F5F5F5; border-radius: 8px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#E8E8E8'" onmouseout="this.style.backgroundColor='#F5F5F5'">
                 <span style="font-size: 0.9rem; color: #1E1E1E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Help me prepare for my Care Provider visit</span>
