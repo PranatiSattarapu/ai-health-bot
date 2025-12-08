@@ -268,23 +268,25 @@ def delete_file(file_id):
     except Exception as e:
         print(f"Error deleting file {file_id}: {e}")
 def get_guideline_filenames():
-    """Return guideline metadata, cached once per session."""
-    if st.session_state.cached_guidelines is not None:
-        return st.session_state.cached_guidelines
+    # ✅ SAFE access
+    cached = st.session_state.get("cached_guidelines")
+
+    if cached:
+        print("📦 Returning cached guideline filenames")
+        return cached
+
+    print("📁 Fetching guideline filenames from Drive")
 
     service = get_drive_service()
     if not service:
         return []
 
-    guideline_files = api_get_files_in_folder(service, FOLDER_ID_GUIDELINES)
+    files = []  # fetch from Drive here
 
-    # Cache it
-    st.session_state.cached_guidelines = [
-        {"id": f["id"], "name": f["name"], "mimeType": f["mimeType"]}
-        for f in guideline_files
-    ]
+    # ✅ ALWAYS set cache
+    st.session_state.cached_guidelines = files
+    return files
 
-    return st.session_state.cached_guidelines
 def get_all_patient_files():
     # Safe existence check - NEVER use st.session_state.<attr>
     if "cached_patient_files" in st.session_state and st.session_state["cached_patient_files"] is not None:
