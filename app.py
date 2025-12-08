@@ -443,7 +443,7 @@ st.markdown("""
         <div class="action-icon">
             <i class="bi bi-graph-up" style="font-size: 2rem; color: #1E1E1E;"></i>
         </div>
-        <a href="https://member.continuumcare.ai/dashboard/userdata" target="_self" style="font-size: 1.5rem; color: #1E1E1E; font-weight: normal; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; text-decoration: none; cursor: pointer;">View Dashboard</a>
+                <span style="font-size: 1.5rem; color: #1E1E1E; font-weight: normal; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">View Dashboard</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
