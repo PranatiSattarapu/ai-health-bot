@@ -64,41 +64,42 @@ def fetch_patient_data_by_id(_):
         return None
 
 def load_frameworks():
-    print(">>> CACHE USED? cached_frameworks exists and valid:",
-          "cached_frameworks" in st.session_state and 
-          st.session_state.cached_frameworks is not None and
-          len(st.session_state.cached_frameworks) > 0)
+    print(
+        ">>> CACHE USED? cached_frameworks exists and valid:",
+        "cached_frameworks" in st.session_state
+        and isinstance(st.session_state.cached_frameworks, list)
+        and len(st.session_state.cached_frameworks) > 0
+    )
 
-    # 1. If cache exists AND has data → return it
+    # ✅ Return cached frameworks
     if (
         "cached_frameworks" in st.session_state
         and isinstance(st.session_state.cached_frameworks, list)
         and len(st.session_state.cached_frameworks) > 0
     ):
-
         print(">>> Returning cached frameworks")
         return st.session_state.cached_frameworks
 
     print(">>> No valid cache found, loading frameworks from Drive")
 
-    raw = get_framework_content()  # downloads once per session
+    raw = get_framework_content()
 
     frameworks = []
-    if raw is None or raw.strip() == "":
-        print("⚠️ WARNING: get_framework_content() returned empty content")
-    else:
+    if raw:
         blocks = raw.split("--- START OF PROMPT FRAMEWORK:")
-
         for block in blocks[1:]:
             try:
                 header, content = block.split("---", 1)
-                name = header.strip()
-                full_text = content.replace("END OF PROMPT FRAMEWORK:", "").strip()
-                frameworks.append({"name": name, "content": full_text})
-            except:
+                frameworks.append({
+                    "name": header.strip(),
+                    "content": content.replace(
+                        "END OF PROMPT FRAMEWORK:", ""
+                    ).strip()
+                })
+            except Exception:
                 print("⚠️ Skipping malformed framework block")
 
-    # 3. Save to cache
+    # ✅ Correct cache key
     st.session_state.cached_frameworks = frameworks
     print(">>> Frameworks cached!", len(frameworks))
 
