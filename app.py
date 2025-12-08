@@ -3,23 +3,18 @@ from drive_manager import list_data_files
 from workflow import generate_response
 from datetime import datetime
 
-# --- IMPORTANT: Initialize cache keys BEFORE importing code uses them ---
-CACHE_KEYS = {
-    "cached_guidelines": None,
-    "cached_frameworks": None,
-    "cached_patient_files": None,
-    "cached_guideline_contents": {}  # ← FIX: Initialize as empty dict, not None
-}
 
-for key, default_value in CACHE_KEYS.items():
-    if key not in st.session_state:
-        st.session_state[key] = default_value
 
 # --- Streamlit Configuration ---
 st.set_page_config(page_title="Health Tutor Console", layout="wide")
 
 # --- Custom CSS for Right Panel ---
 # --- Custom CSS (merged theme) ---
+# Add Bootstrap Icons CDN
+st.markdown("""
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
     /* Hide Streamlit default elements */
@@ -124,9 +119,10 @@ st.markdown("""
         align-items: center;
     }
     
-    .preset-icon svg {
-        width: 36px;
-        height: 36px;
+    .preset-icon i {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .alert-box {
@@ -222,19 +218,13 @@ if "show_chat" not in st.session_state:
 with st.sidebar:
     st.markdown("""
       <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2h-6l-4 4-4-4H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="8" cy="10" r="1" fill="#1E1E1E"/>
-            <circle cx="12" cy="10" r="1" fill="#1E1E1E"/>
-            <circle cx="16" cy="10" r="1" fill="#1E1E1E"/>
-            <path d="M6 18l-2 2v-2" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <i class="bi bi-chat-dots" style="font-size: 1.5rem; color: #1E1E1E; flex-shrink: 0;"></i>
         <h3 style="font-size: 1.5rem; font-weight: 600; color: #1E1E1E; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Chat History</h3>
     </div>
     <div class="chat-history" style="margin-top: 1rem;">
         <ul style="list-style: none; padding: 0; margin: 0;">
             <li style="padding: 0.75rem; margin-bottom: 0.5rem; background-color: #F5F5F5; border-radius: 8px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#E8E8E8'" onmouseout="this.style.backgroundColor='#F5F5F5'">
-                <span style="font-size: 0.9rem; color: #1E1E1E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Give me a 30-day health summary</span>
+                <span style="font-size: 0.9rem; color: #1E1E1E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Give me my 30-day health report</span>
             </li>
             <li style="padding: 0.75rem; margin-bottom: 0.5rem; background-color: #F5F5F5; border-radius: 8px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#E8E8E8'" onmouseout="this.style.backgroundColor='#F5F5F5'">
                 <span style="font-size: 0.9rem; color: #1E1E1E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Help me prepare for my Care Provider visit</span>
@@ -286,49 +276,25 @@ with main_col:
     preset_questions = [
         {
             "icon": """<div class="preset-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="#1E1E1E" stroke-width="1" fill="none"/>
-                    <path d="M3 10h18M8 2v4M16 2v4" stroke="#1E1E1E" stroke-width="1" stroke-linecap="round"/>
-                    <rect x="7" y="14" width="2" height="2" rx="0.5" fill="#1E1E1E"/>
-                    <rect x="11" y="14" width="2" height="2" rx="0.5" fill="#1E1E1E"/>
-                    <rect x="15" y="14" width="2" height="2" rx="0.5" fill="#1E1E1E"/>
-                </svg>
+                <i class="bi bi-calendar-check" style="font-size: 2.25rem; color: #1E1E1E;"></i>
             </div>""",
-            "text": "Give me a 30-day health summary"
+            "text": "Give me my 30-day health report"
         },
         {
             "icon": """<div class="preset-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0z" stroke="#1E1E1E" stroke-width="1" fill="none"/>
-                    <path d="M12 12v7M12 5v3" stroke="#1E1E1E" stroke-width="1" stroke-linecap="round"/>
-                    <path d="M8 12a4 4 0 0 1 8 0" stroke="#1E1E1E" stroke-width="1" fill="none" stroke-linecap="round"/>
-                    <circle cx="6.5" cy="19" r="2" stroke="#1E1E1E" stroke-width="1" fill="none"/>
-                    <circle cx="17.5" cy="19" r="2" stroke="#1E1E1E" stroke-width="1" fill="none"/>
-                    <path d="M6.5 19h11" stroke="#1E1E1E" stroke-width="1" stroke-linecap="round"/>
-                </svg>
+                <i class="bi bi-hospital" style="font-size: 2.25rem; color: #1E1E1E;"></i>
             </div>""",
             "text": "Help me prepare for my Care Provider visit"
         },
         {
             "icon": """<div class="preset-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="10" cy="10" r="7" stroke="#1E1E1E" stroke-width="1" fill="none"/>
-                    <path d="M16 16l3 3" stroke="#1E1E1E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M5 10h1.5M7 7.5h1.5M9.5 6h1M12 7.5h1M14.5 10h1M10 10h1M8 12h1M10 13.5h1M12 12h1M14 12h1" stroke="#1E1E1E" stroke-width="1.5" stroke-linecap="round"/>
-                    <path d="M5 10l2.5-2.5 2 2.5 2-2.5 2.5 2.5" stroke="#1E1E1E" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <i class="bi bi-heart-pulse" style="font-size: 2.25rem; color: #1E1E1E;"></i>
             </div>""",
             "text": "Give me my heart health status"
         },
         {
             "icon": """<div class="preset-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="7" cy="7" r="2.5" stroke="#1E1E1E" stroke-width="1" fill="none"/>
-                    <path d="M7 9.5v2.5M7 12c-1.5 0-2.5 1-2.5 2.5" stroke="#1E1E1E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M7 9.5l3 2.5" stroke="#1E1E1E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-                    <rect x="13" y="5" width="8" height="10" rx="1" stroke="#1E1E1E" stroke-width="1" fill="none"/>
-                    <path d="M15 8h4M15 10h4M15 12h2" stroke="#1E1E1E" stroke-width="1" stroke-linecap="round"/>
-                </svg>
+                <i class="bi bi-exclamation-triangle" style="font-size: 2.25rem; color: #1E1E1E;"></i>
             </div>""",
             "text": "Explain my alerts"
         },
@@ -414,14 +380,14 @@ st.markdown("""
     align-items: center;
 }
 
-.right-panel .alert-icon svg {
-    width: 32px;
-    height: 32px;
+.right-panel .alert-icon i {
+    font-size: 2rem;
+    color: #1E1E1E;
 }
 
 .right-panel .alert-count {
     font-size: 2rem;
-    color: #E4080A !important;
+    color: red !important;
     font-weight: normal;
 }
 
@@ -433,13 +399,9 @@ st.markdown("""
     align-items: center;
 }
 
-.right-panel .action-icon svg {
-    width: 32px;
-    height: 32px;
-}
-.right-panel .action-icon svg {
-    width: 32px;
-    height: 32px;
+.right-panel .action-icon i {
+    font-size: 2rem;
+    color: #1E1E1E;
 }
 
 .right-panel .action-item {
@@ -460,45 +422,28 @@ st.markdown("""
 st.markdown("""
 <div class="right-panel">
     <div class="alert-section">
-        <div class="alert-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="18" cy="8" r="1" fill="#E74C3C"/>
-            </svg>
+        <div class="alert-icon" style="position: relative;">
+            <i class="bi bi-bell-fill" style="font-size: 2rem; color: #1E1E1E;"></i>
         </div>
         <div class="alert-count">2 Alerts</div>
     </div>
     <div class="action-item">
         <div class="action-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="16 6 12 2 8 6" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="12" y1="2" x2="12" y2="15" stroke="#1E1E1E" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <i class="bi bi-share" style="font-size: 2rem; color: #1E1E1E;"></i>
         </div>
         <span style="font-size: 1.5rem; color: #1E1E1E; font-weight: normal; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Share with Carepod</span>
     </div>
    <div class="action-item">
         <div class="action-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="#1E1E1E" stroke-width="1.5" fill="none"/>
-                <path d="M12 8v8M8 12h8" stroke="#1E1E1E" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <i class="bi bi-camera" style="font-size: 2rem; color: #1E1E1E;"></i>
         </div>
         <span style="font-size: 1.5rem; color: #1E1E1E; font-weight: normal; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Add Health Photos</span>
     </div>
    <div class="action-item">
         <div class="action-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 3v18h18" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 12l4-4 4 4 6-6" stroke="#1E1E1E" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="7" y="16" width="2" height="2" fill="#1E1E1E"/>
-                <rect x="11" y="14" width="2" height="4" fill="#1E1E1E"/>
-                <rect x="15" y="10" width="2" height="8" fill="#1E1E1E"/>
-            </svg>
+            <i class="bi bi-graph-up" style="font-size: 2rem; color: #1E1E1E;"></i>
         </div>
-        <span style="font-size: 1.5rem; color: #1E1E1E; font-weight: normal; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">View Dashboard</span>
+        <a href="https://member.continuumcare.ai/dashboard/userdata" target="_self" style="font-size: 1.5rem; color: #1E1E1E; font-weight: normal; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; text-decoration: none; cursor: pointer;">View Dashboard</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
