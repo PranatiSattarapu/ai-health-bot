@@ -541,7 +541,6 @@ You MUST cite ONLY from the "RETRIEVED GUIDELINE TEXT" section.
 Rules:
 - Use the exact filenames exactly as shown in the retrieved guideline text
 - Do NOT rename, clean, summarize, or normalize filenames
-- Every factual clinical statement must be supported by a citation
 - If no guideline supports a statement, explicitly write:
   "No guideline citation available."
 """
