@@ -562,7 +562,7 @@ Rules:
         retrieval_prompt = f"""
         You MUST use the provided File Search tool.
         Do NOT answer from general knowledge.
-        Search the ADA clinical practice guidelines for information relevant to:
+        Search the clinical practice guidelines for information relevant to:
 
 
 Query: {user_query}
