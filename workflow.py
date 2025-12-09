@@ -531,16 +531,19 @@ Do NOT override format, tone, or safety rules.
 === FRAMEWORK START: {chosen_framework_name} ===
 {framework_text}
 === FRAMEWORK END ===
-CRITICAL SOURCE RULES :
+CRITICAL CITATION RULES:
 
-- You may ONLY use information present in the section titled "RETRIEVED GUIDELINE TEXT".
-- You MUST NOT use general medical knowledge, training data, or prior familiarity.
-- Every citation MUST exactly match the document title as it appears in the retrieved text.
-- Do NOT normalize, rename, summarize, or “clean up” guideline titles.
-- If a claim cannot be supported by retrieved guideline text, write:
+The framework above contains example citations.
+DO NOT use those example names.
+
+You MUST cite ONLY from the "RETRIEVED GUIDELINE TEXT" section.
+
+Rules:
+- Use the exact filenames exactly as shown in the retrieved guideline text
+- Do NOT rename, clean, summarize, or normalize filenames
+- Every factual clinical statement must be supported by a citation
+- If no guideline supports a statement, explicitly write:
   "No guideline citation available."
-
-Violation of these rules is NOT allowed.
 """
 
     # 2. Load patient data
@@ -650,18 +653,7 @@ Find specific recommendations, target values, and evidence-based protocols.
                     guideline_text = "\n\n---\n\n".join(retrieved_chunks)
         
         # Clean up source names for better citation formatting (always run this)
-        cleaned_sources = []
-        for source in sources_set:
-            # Remove .pdf extension
-            clean_name = source.replace('.pdf', '')
-            # Remove "Copy of " prefix if present
-            clean_name = clean_name.replace('Copy of ', '')
-            # Remove extra spaces
-            clean_name = ' '.join(clean_name.split())
-            cleaned_sources.append(clean_name)
-
-        print(f"📚 Guideline sources used: {cleaned_sources if cleaned_sources else 'None'}")
-
+       
     except Exception as e:
         print("⚠️ FileSearch error:", e)
         import traceback
@@ -689,7 +681,6 @@ Use it STRICTLY under the rules of the provided framework.
 === RETRIEVED GUIDELINE TEXT ===
 {guideline_text}
 
-{f"=== SOURCES CONSULTED ===" + chr(10) + chr(10).join(f"- {s}" for s in cleaned_sources) if cleaned_sources else ""}
 
 ---
 
