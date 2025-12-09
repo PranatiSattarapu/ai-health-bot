@@ -531,6 +531,16 @@ Do NOT override format, tone, or safety rules.
 === FRAMEWORK START: {chosen_framework_name} ===
 {framework_text}
 === FRAMEWORK END ===
+CRITICAL SOURCE RULES :
+
+- You may ONLY use information present in the section titled "RETRIEVED GUIDELINE TEXT".
+- You MUST NOT use general medical knowledge, training data, or prior familiarity.
+- Every citation MUST exactly match the document title as it appears in the retrieved text.
+- Do NOT normalize, rename, summarize, or “clean up” guideline titles.
+- If a claim cannot be supported by retrieved guideline text, write:
+  "No guideline citation available."
+
+Violation of these rules is NOT allowed.
 """
 
     # 2. Load patient data
