@@ -458,7 +458,7 @@ with main_col:
             st.markdown(query)
 
         with st.chat_message("assistant"):
-            with st.spinner("Claude is thinking..."):
+            with st.spinner("Thinking..."):
                 answer = generate_response(query)
 
             st.markdown(answer)
