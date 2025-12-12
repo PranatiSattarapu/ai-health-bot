@@ -235,23 +235,24 @@ recommendations
 ● Example: "Your blood pressure remained stable at 120-127/77-82
 mmHg, staying within recommended ranges [1 ADA]"
 ● Numbering sequence: Assign numbers in order of first appearance
-● Abbreviation guide:
-○ ADA = American Diabetes Association
-○ AHA/ACC = American Heart Association/American Colleage of
-Cardiology
-○ SSATHI = South Asian-specific guidelines
-○ NICE = National Institute of Health and Care Excellence (UK)
+● Abbreviation guide - Use these EXACT abbreviations:
+    ○ AHA_HBP = AHA/ACC High Blood Pressure Guidelines
+    ○ ADA_CDRM = ADA Cardiovascular Disease and Risk Management
+    ○ ADA_CKDRM = ADA Chronic Kidney Disease and Risk Management
+    ○ ADA_IHO = ADA Facilitating Positive Health Behaviors
+    ○ ADA_PREV = ADA Prevention or Delay of Diabetes
+    ○ ADA_REV = ADA Summary of Revisions
+    ○ JNC8 = JNC8 2014 Evidence-Based Guideline
+    ○ NICE_HTN = NICE UK Hypertension Management
 
 ■ Source Citation List Requirements
 ● Section Heading: “Source Citations”
 ● Format: [# AbbrevName] Full Document Title (Year)
 ● List all citations used in numerical order
 ● Example format:
-○ [1 ADA] ADA Standards of Care - Chronic Kidney Disease in
-Diabetes (2025)
-○ [2 ADA] ADA Standards of Care - Older Adults with Diabetes
-(2025)
-○ [3 AHA/ACC] 2025 AHA/ACC Hypertension Guidelines
+    ○ [1 AHA_HBP] Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults - A Report of the American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines
+    ○ [2 ADA_CDRM] 10. Cardiovascular Disease and Risk Management - Standards of Care in Diabetes - 2025
+    ○ [3 ADA_CKDRM] 11. Chronic Kidney Disease and Risk Management - Standards of Care in Diabetes - 2025
 
 ■ Citation Requirements:
 ● Cite specific guideline for each threshold hold mentioned
