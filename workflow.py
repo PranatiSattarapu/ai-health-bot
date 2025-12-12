@@ -608,6 +608,7 @@ You MUST cite ONLY from the "RETRIEVED GUIDELINE TEXT" section.
 3. Citation format:
    - Inline: [number abbreviation] (e.g., [1 AHA_HBP], [2 ADA_CDRM])
    - In Source Citations section: [number abbreviation] Full Document Name
+   -NEVER use "per [citation]" or "according to [citation]" 
    
 4. Match the retrieved guideline filenames to these abbreviations:
    - Look for key terms in the filename to identify the correct abbreviation
