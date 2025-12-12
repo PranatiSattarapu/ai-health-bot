@@ -396,6 +396,7 @@ import csv   # To read CSV files
 from io import StringIO # To handle CSV reading from string data
 # import anthropic
 from anthropic import Anthropic
+import re
 
 # --- Configuration & Secrets ---
 # WARNING: Embed your actual key here. Using a placeholder for safety.
@@ -411,6 +412,88 @@ claude = Anthropic(api_key=CLAUDE_API_KEY)
 # Define your File Search Store name (The ID you got from the indexing script)
 
 PATIENT_DATA_FOLDER = "user_data" 
+
+
+GUIDELINE_MAP = {
+    "AHA_HBP": {
+        "short": "AHA_HBP",
+        "full": "Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults - A Report of the American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines"
+    },
+    "ADA_CDRM": {
+        "short": "ADA_CDRM",
+        "full": "10. Cardiovascular Disease and Risk Management - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_CKDRM": {
+        "short": "ADA_CKDRM",
+        "full": "11. Chronic Kidney Disease and Risk Management - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_IHO": {
+        "short": "ADA_IHO",
+        "full": "5. Facilitating Positive Health Behaviors and Well-being to Improve Health Outcomes - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_PREV": {
+        "short": "ADA_PREV",
+        "full": "3. Prevention or Delay of Diabetes and Associated Comorbidities - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_REV": {
+        "short": "ADA_REV",
+        "full": "Summary of Revisions - Standards of Care in Diabetes Aquatic Life - - 2025"
+    }
+    ,
+    "JNC8": {
+        "short": "JNC8",
+        "full": " 2014 Evidence-Based Guideline for the Management of High Blood Pressure in Adults"
+    },
+    "NICE_HTN": {
+        "short": "NICE_HTN",
+        "full": " NICE Guidelines - UK Hypertension Management"
+    }
+   
+}
+
+
+def format_citations(answer: str):
+    """
+    Normalizes model-generated citations like:
+    [1 AHA/ACC] → [1 AHA_HBP]
+    And rebuilds the Source Citations section.
+    """
+    
+    # FIXED REGEX: allow underscores, digits, hyphens, slashes
+    pattern = r"\[(\d+)\s+([A-Za-z0-9_/\-]+)\]"
+    matches = re.findall(pattern, answer)
+
+    # Normalize inline citations
+    def replace(match):
+        idx, abbr = match.group(1), match.group(2)
+        abbr_clean = abbr.split("/")[0]   # Clean "AHA/ACC" → "AHA"
+
+        if abbr_clean in GUIDELINE_MAP:
+            return f"[{idx} {GUIDELINE_MAP[abbr_clean]['short']}]"
+
+        return match.group(0)
+
+    answer = re.sub(pattern, replace, answer)
+
+    # Build the cleaned Source Citations list
+    source_lines = []
+    for idx, abbr in matches:
+        abbr_clean = abbr.split("/")[0]
+        if abbr_clean in GUIDELINE_MAP:
+            source_lines.append(
+                f"[{idx} {GUIDELINE_MAP[abbr_clean]['short']}] {GUIDELINE_MAP[abbr_clean]['full']}"
+            )
+
+    # Replace the Source Citations block
+    source_block = "Source Citations\n\n" + "\n".join(source_lines)
+
+    answer = re.sub(
+        r"Source Citations[\s\S]*?(Important Note:)",
+        source_block + "\n\n\\1",
+        answer
+    )
+
+    return answer
 
 # NOTE: The frameworks.py file must be in the same directory
 try:
@@ -694,7 +777,10 @@ User question: {user_query}
             messages=[{"role": "user", "content": final_prompt}]
         )
 
-        return claude_resp.content[0].text
+        final_text = claude_resp.content[0].text
+        final_text = format_citations(final_text)
+        return final_text
+
 
     except Exception as e:
         print("Claude API Error:", e)
