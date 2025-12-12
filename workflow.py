@@ -658,8 +658,7 @@ VERIFICATION BEFORE RESPONDING:
     try:
         # Create a more detailed retrieval prompt
         retrieval_prompt = f"""
-        You MUST ALWAYS use the provided File Search tool.
-        Do NOT answer from general knowledge.
+        USE THE FILE SEARCH TOOL to find information from clinical practice guidelines.
         Search the clinical practice guidelines for information relevant to:
 
 
@@ -667,6 +666,8 @@ Query: {user_query}
 
 Patient context: {patient_text[:600]}
 
+Search the guidelines and return relevant excerpts with source information.
+DO NOT answer from general knowledge - ONLY from the guideline documents.
 Find specific recommendations, target values, and evidence-based protocols.
 """
 
@@ -680,11 +681,6 @@ Find specific recommendations, target values, and evidence-based protocols.
                         "fileSearchStoreNames": [GUIDELINE_STORE_NAME]
                     }
                 }],
-                tool_config={
-            "function_calling_config": {
-                "mode": "ANY"  # Forces the model to use at least one tool
-            }
-        },
                 max_output_tokens=2000,
                 temperature=0.2
             )
