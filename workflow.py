@@ -411,6 +411,42 @@ claude = Anthropic(api_key=CLAUDE_API_KEY)
 # Define your File Search Store name (The ID you got from the indexing script)
 
 PATIENT_DATA_FOLDER = "user_data" 
+GUIDELINE_MAP = {
+    "AHA_HBP": {
+        "short": "AHA_HBP",
+        "full": "Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults - A Report of the American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines"
+    },
+    "ADA_CDRM": {
+        "short": "ADA_CDRM",
+        "full": "10. Cardiovascular Disease and Risk Management - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_CKDRM": {
+        "short": "ADA_CKDRM",
+        "full": "11. Chronic Kidney Disease and Risk Management - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_IHO": {
+        "short": "ADA_IHO",
+        "full": "5. Facilitating Positive Health Behaviors and Well-being to Improve Health Outcomes - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_PREV": {
+        "short": "ADA_PREV",
+        "full": "3. Prevention or Delay of Diabetes and Associated Comorbidities - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_REV": {
+        "short": "ADA_REV",
+        "full": "Summary of Revisions - Standards of Care in Diabetes Aquatic Life - - 2025"
+    }
+    ,
+    "JNC8": {
+        "short": "JNC8",
+        "full": " 2014 Evidence-Based Guideline for the Management of High Blood Pressure in Adults"
+    },
+    "NICE_HTN": {
+        "short": "NICE_HTN",
+        "full": " NICE Guidelines - UK Hypertension Management"
+    }
+   
+}
 
 # NOTE: The frameworks.py file must be in the same directory
 try:
@@ -523,6 +559,10 @@ def generate_response(user_query):
     framework_text = best_fw["content"]
 
     print(f"🧠 Chosen Framework: {chosen_framework_name}")
+    citation_guide = "\n".join([
+    f"  - {data['short']}: {data['full']}" 
+    for key, data in GUIDELINE_MAP.items()
+])
 
     system_prompt = f"""
 You MUST strictly follow everything defined in the framework. 
@@ -532,17 +572,29 @@ Do NOT override format, tone, or safety rules.
 {framework_text}
 === FRAMEWORK END ===
 CRITICAL CITATION RULES:
+1. Use ONLY these abbreviations for citations:
+{citation_guide}
 
-The framework above contains example citations.
-DO NOT use those example names.
+2. Citation format:
+   - Inline: [number abbreviation] (e.g., [1 AHA_HBP], [2 ADA_CDRM])
+   - In Source Citations section: [number abbreviation] Full Document Name
+   
+3. Match the retrieved guideline filenames to these abbreviations:
+   - Look for key terms in the filename to identify the correct abbreviation
+   - Examples:
+     * "High Blood Pressure" → AHA_HBP
+     * "Cardiovascular Disease and Risk" → ADA_CDRM
+     * "Chronic Kidney Disease" → ADA_CKDRM
+     * "Prevention or Delay" → ADA_PREV
+     * "JNC" or "2014 Evidence" → JNC8
+     * "NICE" → NICE_HTN
 
-You MUST cite ONLY from the "RETRIEVED GUIDELINE TEXT" section.
+4. Source Citations section format:
+[1 AHA_HBP] Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults - A Report of the American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines
 
-Rules:
-- Use the exact filenames exactly as shown in the retrieved guideline text
-- Do NOT rename, clean, summarize, or normalize filenames
-- If no guideline supports a statement, explicitly write:
-  "No guideline citation available."
+5. If no guideline supports a statement, write: "No guideline citation available."
+
+6. DO NOT use the example citation names from the framework (like "ADA", "AHA/ACC"). Use ONLY the abbreviations listed above.
 """
 
     # 2. Load patient data
