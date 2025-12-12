@@ -658,7 +658,7 @@ VERIFICATION BEFORE RESPONDING:
     try:
         # Create a more detailed retrieval prompt
         retrieval_prompt = f"""
-        You MUST use the provided File Search tool.
+        You MUST ALWAYS use the provided File Search tool.
         Do NOT answer from general knowledge.
         Search the clinical practice guidelines for information relevant to:
 
