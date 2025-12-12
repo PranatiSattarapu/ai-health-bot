@@ -680,6 +680,11 @@ Find specific recommendations, target values, and evidence-based protocols.
                         "fileSearchStoreNames": [GUIDELINE_STORE_NAME]
                     }
                 }],
+                tool_config={
+            "function_calling_config": {
+                "mode": "ANY"  # Forces the model to use at least one tool
+            }
+        },
                 max_output_tokens=2000,
                 temperature=0.2
             )
