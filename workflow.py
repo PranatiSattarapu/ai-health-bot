@@ -444,6 +444,26 @@ GUIDELINE_MAP = {
     "NICE_HTN": {
         "short": "NICE_HTN",
         "full": " NICE Guidelines - UK Hypertension Management"
+    },
+    "PRANA": {
+        "short": "PRANA",
+        "full": " PRANA/Sutter Guidelines - Prevention and Risk Assessments"
+    },
+    "SSATHI": {
+        "short": "SSATHI",
+        "full": " SSATHI Guidelines - South Asian Health"
+    },
+    "ADA_GG": {
+        "short": "ADA_GG",
+        "full": " 6. Glycemic Goals and Hypoglycemia - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_OA": {
+        "short": "ADA_OA",
+        "full": " 13. Older Adults - Standards of Care in Diabetes - 2025"
+    },
+    "ADA_IMPR": {
+        "short": "ADA_IMPR",
+        "full": " 3. Prevention or Delay of Diabetes and Associated Comorbidities - Standards of Care in Diabetes - 2025"
     }
    
 }
@@ -571,30 +591,56 @@ Do NOT override format, tone, or safety rules.
 === FRAMEWORK START: {chosen_framework_name} ===
 {framework_text}
 === FRAMEWORK END ===
-CRITICAL CITATION RULES:
+The framework above contains example citations.
+DO NOT use those example names.
+
+You MUST cite ONLY from the "RETRIEVED GUIDELINE TEXT" section.
+
 1. Use ONLY these abbreviations for citations:
 {citation_guide}
 
-2. Citation format:
+2. SERIALIZATION IS MANDATORY:
+   - Number citations sequentially: [1 abbreviation], [2 abbreviation], [3 abbreviation], etc.
+   - Each unique source gets a NEW number in order of first appearance
+   - NEVER reuse the same number for different sources
+   - Example: [1 AHA_HBP], [2 ADA_CDRM], [3 ADA_CKDRM] - NOT [1 AHA_HBP], [1 ADA_CDRM]
+
+3. Citation format:
    - Inline: [number abbreviation] (e.g., [1 AHA_HBP], [2 ADA_CDRM])
    - In Source Citations section: [number abbreviation] Full Document Name
    
-3. Match the retrieved guideline filenames to these abbreviations:
+4. Match the retrieved guideline filenames to these abbreviations:
    - Look for key terms in the filename to identify the correct abbreviation
-   - Examples:
-     * "High Blood Pressure" → AHA_HBP
-     * "Cardiovascular Disease and Risk" → ADA_CDRM
-     * "Chronic Kidney Disease" → ADA_CKDRM
-     * "Prevention or Delay" → ADA_PREV
-     * "JNC" or "2014 Evidence" → JNC8
-     * "NICE" → NICE_HTN
+   - Use the exact filenames from the "RETRIEVED GUIDELINE TEXT" section
+   - Examples of matching:
+     * "High Blood Pressure" in filename → AHA_HBP
+     * "Cardiovascular Disease and Risk" in filename → ADA_CDRM
+     * "Chronic Kidney Disease" in filename → ADA_CKDRM
+     * "Prevention or Delay" in filename → ADA_PREV
+     * "JNC" or "2014 Evidence" in filename → JNC8
+     * "NICE" in filename → NICE_HTN
+     * "SSATHI" in filename → SSATHI
 
-4. Source Citations section format:
-[1 AHA_HBP] Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults - A Report of the American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines
+5. Source Citations section MUST:
+   - List all citations in numerical order (1, 2, 3...)
+   - Use format: [number abbreviation] Full Document Name
+   - Example:
+     [1 SSATHI] SSATHI Guidelines - South Asian Health
+     [2 AHA_HBP] Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults...
 
-5. If no guideline supports a statement, write: "No guideline citation available."
+6. Rules for citing:
+   - Do NOT rename, clean, summarize, or normalize filenames
+   - Use the exact filenames from the retrieved guideline text to match to abbreviations
+   - If no guideline supports a statement, explicitly write: "No guideline citation available."
 
-6. DO NOT use the example citation names from the framework (like "ADA", "AHA/ACC"). Use ONLY the abbreviations listed above.
+7. DO NOT use the example citation names from the framework (like "ADA", "AHA/ACC" alone). 
+   Use ONLY the abbreviations listed above (like ADA_CDRM, ADA_CKDRM, AHA_HBP).
+
+VERIFICATION BEFORE RESPONDING:
+- Check that each unique source has a different number
+- Verify numbers are sequential (1, 2, 3... no gaps or repeats)
+- Confirm Source Citations section lists all sources in numerical order
+- Verify all citations reference actual content from RETRIEVED GUIDELINE TEXT section
 """
 
     # 2. Load patient data
