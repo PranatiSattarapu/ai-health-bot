@@ -88,13 +88,35 @@
 # #     active_messages.append({"role": "assistant", "content": answer})
 # #     st.session_state.sessions[st.session_state.current_session] = active_messages
 
-
+import requests
 import streamlit as st
 from workflow import generate_response
 from datetime import datetime
 
-# --- Streamlit Configuration ---
 st.set_page_config(page_title="Health Tutor Console", layout="wide")
+
+#--------------User data fetching-------------
+user_id = st.query_params.get("user_id")
+
+if not user_id:
+    st.error("User not identified. Please access chatbot via the dashboard.")
+    st.stop()
+def fetch_user_data(user_id):
+    url = "https://mds.qa.continuumcare.ai/api/llm/data"
+    params = {
+        "user_id": user_id,
+        "page": 1,
+        "size": 200
+    }
+    r = requests.get(url, params=params, timeout=10)
+    r.raise_for_status()
+    return r.json()
+if "user_data" not in st.session_state:
+    with st.spinner("Loading your health data..."):
+        st.session_state.user_data = fetch_user_data(user_id)
+
+#------------------------------------
+# --- Streamlit Configuration ---
 
 # --- Custom CSS ---
 # Add Bootstrap Icons CDN
@@ -459,7 +481,11 @@ with main_col:
 
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                answer = generate_response(query)
+                answer = generate_response(
+                query=query,
+                user_data=st.session_state.user_data
+            )
+
 
             st.markdown(answer)
 
