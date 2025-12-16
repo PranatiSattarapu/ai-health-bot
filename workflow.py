@@ -670,6 +670,8 @@ VERIFICATION BEFORE RESPONDING:
 
     # 2. Load patient data
     patient_text = normalize_user_data(user_data)
+    with st.expander("🔍 Debug: Patient data being used"):
+        st.text(patient_text[:1500])
 
 
     # 3. USE GEMINI FILE SEARCH FOR RETRIEVAL
