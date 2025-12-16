@@ -409,31 +409,6 @@ claude = Anthropic(api_key=CLAUDE_API_KEY)
 
 
 # Define your File Search Store name (The ID you got from the indexing script)
-def normalize_user_data(api_data):
-    
-    items = api_data["items"][:200]  # cap
- # this SHOULD exist; fail loudly if not
-    lines = []
-
-    for item in items:
-        record_date = item["recordDate"]
-        source = item.get("source", "unknown")
-
-        for key, value in item.items():
-            if key.endswith("Reports") and isinstance(value, list) and value:
-                for report in value:
-                    clean_report = {
-                        k: v for k, v in report.items()
-                        if v is not None and k not in ("id", "createdBy", "createdOn")
-                    }
-                    lines.append(
-                        f"{key} on {record_date} ({source}): {clean_report}"
-                    )
-
-    if not lines:
-        return "No patient health records available."
-
-    return "\n".join(lines)
 
 PATIENT_DATA_FOLDER = "user_data" 
 GUIDELINE_MAP = {
@@ -593,12 +568,12 @@ def load_local_patient_data(folder_path=PATIENT_DATA_FOLDER):
         
     return "\n".join(patient_text)
 
-def generate_response(query, user_data):
+def generate_response(user_query):
     print("\n🔍 Starting generate_response (Gemini File Search + Claude)")
 
     # 1. Load & match framework
     frameworks = load_frameworks()
-    best_fw = choose_best_framework(query, frameworks)
+    best_fw = choose_best_framework(user_query, frameworks)
 
     chosen_framework_name = best_fw["name"]
     framework_text = best_fw["content"]
@@ -670,8 +645,7 @@ VERIFICATION BEFORE RESPONDING:
 """
 
     # 2. Load patient data
-    patient_text = normalize_user_data(user_data)
-
+    patient_text = load_local_patient_data()
 
     # 3. USE GEMINI FILE SEARCH FOR RETRIEVAL
     print("📄 Calling Gemini FileSearch to retrieve relevant guideline chunks...")
@@ -688,7 +662,7 @@ VERIFICATION BEFORE RESPONDING:
         Search the clinical practice guidelines for information relevant to:
 
 
-Query: {query}
+Query: {user_query}
 
 Patient context: {patient_text[:600]}
 
@@ -787,7 +761,7 @@ Find specific recommendations, target values, and evidence-based protocols.
         print("\n=== DEBUGGING INFO ===")
         print("Model:", "gemini-2.5-pro")
         print("File store:", GUIDELINE_STORE_NAME)
-        print("Query:", query)
+        print("Query:", user_query)
         print("Patient data length:", len(patient_text) if patient_text else 0)
         
         guideline_text = "Error retrieving guidelines."
@@ -809,7 +783,7 @@ Use it STRICTLY under the rules of the provided framework.
 
 ---
 
-User question: {query}
+User question: {user_query}
 """
 
     try:
