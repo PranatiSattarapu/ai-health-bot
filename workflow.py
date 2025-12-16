@@ -411,7 +411,8 @@ claude = Anthropic(api_key=CLAUDE_API_KEY)
 # Define your File Search Store name (The ID you got from the indexing script)
 def normalize_user_data(api_data):
     
-    items = api_data["items"][:200]  # cap # this SHOULD exist; fail loudly if not
+    items = api_data["items"][:200]  # cap
+ # this SHOULD exist; fail loudly if not
     lines = []
 
     for item in items:
@@ -670,8 +671,6 @@ VERIFICATION BEFORE RESPONDING:
 
     # 2. Load patient data
     patient_text = normalize_user_data(user_data)
-    with st.expander("🔍 Debug: Patient data being used"):
-        st.text(patient_text[:1500])
 
 
     # 3. USE GEMINI FILE SEARCH FOR RETRIEVAL
